@@ -136,7 +136,8 @@ var Utils = (function (ns) {
             "User Rate Limit Exceeded",
             "Exception: ???????? ?????: DriveApp.",
             "Exception: Address unavailable",
-            "Exception: Timeout"
+            "Exception: Timeout",
+            "GoogleJsonResponseException: Rate Limit Exceeded" 
            ]
     .some(function(e){
       return  errorText.toString().slice(0,e.length) == e  ;
@@ -355,7 +356,42 @@ var Utils = (function (ns) {
   */
   ns.clone = function (cloneThis) {
     return ns.vanExtend ({} , cloneThis);
-  }
+  };
+  
+  /**
+   * a short cut to add nested properties to a an object
+   * @param {object} [base] the base object
+   * @param {string} propertyScheme something like "a.b.c" will extend as necessary
+   * @return {object} base updated
+   */
+   ns.propify = function (propertyScheme ,base) {
+    
+    // if base not specified, create it
+    if (typeof base === typeof undefined) base = {};
+    
+    // make sure its an object
+    if (typeof base !== typeof {} ) throw 'propify:base needs to be an object';
+    
+    // work through the scheme
+    (propertyScheme || "").split (".")
+      .reduce (function (p,c) {
+      
+        // add a branch if not already existing
+        if (typeof p[c] === typeof undefined) p[c] = {};
+        
+        // make sure we're not overwriting anything
+        if (typeof p[c] !== typeof {}) throw 'propify:branch ' + c + ' not an object in ' + propertyScheme;
+        
+        // move down the branch
+        return p[c];
+  
+      } , base);
+    
+    // now should have the required shape
+    return base;
+  
+  };
+
   /**
   * recursively extend an object with other objects
   * @param {[object]} obs the array of objects to be merged
@@ -592,5 +628,25 @@ var Utils = (function (ns) {
     
     
   };
+  
+  function curry (func) {
+    
+    // get the arguments and stop the first
+    var args = Array.prototype.slice.call (arguments,1);
+    
+    // if there's no more, the call the func and we're done
+    // otherwise we need to create a new curry function with the latest verstion
+    // of the arguments
+    return args.length === func.length ? 
+      func.apply (undefined , args) :
+    curry.bind.apply ( curry , [this , func].concat (args));  
+    
+  };
+  
+  ns.curry = function () {
+    return curry.apply ( null , Array.prototype.slice.call (arguments));
+  }
+
+
   return ns;
 }) (Utils || {});
