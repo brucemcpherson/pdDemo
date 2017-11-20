@@ -19,7 +19,7 @@ var Client = (function (ns) {
   ns.init =  function () {
     // connect to cache
     ns.settings.efx = EffexApiClient;
-    ns.settings.efx.setEnv('prod');
+    ns.settings.efx.setEnv('fb');
     return ns.getConfigs ();
   };
   
@@ -152,15 +152,19 @@ var Client = (function (ns) {
     // subscribe to changes here
     var efx = ns.settings.efx;
     var keys = efx.getKeys();
-    spinCursor();
+    console.log ("got keys", keys);
     
+    spinCursor();
+
     // avoid clicking mania
     clickMania (true);
     
     // read in the data from the file to get various parameters we'll need later
     efx.read (keys.item)
     .then (function(result) {
+      console.log (' first read ' , result.data);
       if (!result.data.ok) throw JSON.stringify(result.data);
+      
       return ns.settings.data = result.data;
     })
     .then (function (data) {
