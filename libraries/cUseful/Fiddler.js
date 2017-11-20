@@ -3,8 +3,9 @@
 * values obtained from setValues method 
 * of a spreadsheet
 * @contructor Fiddler
+* @param {Sheet} [sheet=null] populate the fiddler 
 */
-function Fiddler() {
+function Fiddler(sheet) {
   
   var self = this;
   var values_,
@@ -14,7 +15,8 @@ function Fiddler() {
       functions_,
       renameDups_ = true,
       renameBlanks_ = true,
-      blankOffset_ = 0;
+      blankOffset_ = 0,
+      sheet_ = null;
   
   /**
   * these are the default iteration functions
@@ -32,6 +34,16 @@ function Fiddler() {
   * .row an object with all the properties/values for the current row
   */
   var defaultFunctions_ = {
+    
+   /**
+    * used to compare two values
+    * @param {*} a itema
+    * @param {*} b item b
+    * @return {boolean} whether the same
+    */
+    compareFunc: function(a,b) {
+      return a===b;
+    },
     
     /**
     * used to filter rows
@@ -108,6 +120,24 @@ function Fiddler() {
   // maybe a later version we'll allow changing of default functions
   functions_ = defaultFunctions_;
   
+  /**
+  * @param {Sheet} sheet
+  */
+  self.setSheet = function (sheet) {
+    sheet_ = sheet;
+    return self;
+  };
+  
+  /**
+  * @return {Sheet} sheet
+  */
+  self.getSheet = function (sheet) {
+    return sheet_ ;
+  };
+  
+  
+  
+  
   /// ITERATION FUNCTIONS
   /**
   * iterate through each row - given a specific column
@@ -146,6 +176,7 @@ function Fiddler() {
   self.mapRows = function(func) {
     
     dataOb_ = dataOb_.map(function(row, rowIndex) {
+      var rowLength = Object.keys(row).length;
       var result = (checkAFunc(func) || functions_.mapRows)(row, {
         name: rowIndex,
         data: dataOb_,
@@ -159,11 +190,17 @@ function Fiddler() {
         row: row
       });
       
-      if (!result || result.length !== row.length) {
+      if (!result || typeof result !== "object") {
+        throw new Error ("you need to return the row object - did you forget?");
+      }
+      
+      if (Object.keys(result).length !== rowLength) {
         throw new Error(
           'you cant change the number of columns in a row during map items'
         );
       }
+      
+      
       return result;
     });
     
@@ -182,26 +219,40 @@ function Fiddler() {
     blankOffset_ = off;
     return self;
   };
+  
   /**
   * get the unique values in a column
   * @param {string} columnName
+  * @param {function} [compareFunc]
   * @return {[*]} array of unique values
   */
-  self.getUniqueValues = function(columnName) {
+  self.getUniqueValues = function(columnName, compareFunc) {
     
-    return self.getColumnValues(columnName).filter(function(d, i, a) {
-      return a.indexOf(d) === i;
+    return self.getColumnValues(columnName)
+    .filter(function(d, i, a) {
+      return axof_ (d , a, compareFunc) === i;
     });
     
   };
+  
+  // like indexof except with custom compare
+  function axof_ ( value , arr, compareFunc ) {
+    var cf = checkAFunc(compareFunc) || functions_.compareFunc;
+    for (var i = 0 ; i < arr.length ; i++) {
+       if (cf  (value , arr[i])) return i;
+    }
+    return -1;
+  }                                                
+                                                   
   
   /**
   * iterate through each row - nodifies the data in this fiddler instance
   * @param {[string]} [columnNames] optional which column names to use (default is all)
   * @param {boolean} [keepLast=false] whether to keep the last row or the first found
+  * @param {function} [compareFunc] compare values function
   * @return {Fiddler} self
   */
-  self.filterUnique = function(columnNames, keepLast) {
+  self.filterUnique = function(columnNames, keepLast, compareFunc) {
     
     var headers = self.getHeaders();
     cols = columnNames || headers;
@@ -209,30 +260,30 @@ function Fiddler() {
     
     // may need to reverse
     var data = dataOb_.slice();
-    if (!keepLast && columnNames) {
-      data.reverse();
-    }
+
     // check params are valid
     if (cols.some(function(d) {
       return headers.indexOf(d) === -1;
     })) {
       throw 'unknown columns in ' + JSON.stringify(cols) + ' compared to ' + JSON.stringify(headers);
     }
-    
+
     // filter out dups
     data = data.filter(function(d, i, a) {
-      return !a.slice(i + 1).some(function(e) {
+      // if we're keeping the first one, then keep only if there's none before
+      // if the last one, then keep only if there are none following
+      var soFar = keepLast ? a.slice (i+1) : a.slice (0 , i);
+      
+      return !soFar.some(function(e) {
         return cols.every(function(f) {
-          return d[f] === e[f];
+          return (checkAFunc(compareFunc) || functions_.compareFunc)  (d[f] , e[f]);
         });
       });
+
     });
     
-    // reverse again
-    if (!keepLast && columnNames) {
-      data.reverse();
-    }
-    
+
+   
     // register
     dataOb_ = data;
     return self;
@@ -282,6 +333,16 @@ function Fiddler() {
     });
     
   };
+  /**
+   * sort returns sorted values
+   * for chaining , can be handy to return the fiddler
+   */
+  self.sortFiddler = function (name , descending , auxFiddler ) {
+    var data = self.sort (name , descending , auxFiddler);
+    self.setData (data);
+    return self;
+  }
+  
   self.handySort = function (displayValues, options) {
     // default comparitor & extractor
     options = options || {};
@@ -532,11 +593,43 @@ function Fiddler() {
   };
   
   /**
+   * given a sheet, will populate
+   * @param {Sheet} sheet
+   */
+  self.populate = function (sheet) {
+    
+    // first set the default sheet
+    self.setSheet (sheet);
+    
+    // get the range 
+    var range = sheet.getDataRange();
+    
+    // set the values
+    return self.setValues (range.getValues());
+    
+  };
+  
+  /**
+   * dump values with default values 
+   * @param {Sheet} [sheet=null] the start range to dump it to
+   */
+  self.dumpValues = function (sheet) {
+    
+    var range =(sheet || sheet_).getDataRange();
+    range.clearContent();
+    if (self.getData().length) {
+      self.getRange(range).setValues (self.createValues());
+    }
+    return self;                       
+  };
+  /**
   * get the range required to write the values starting at the given range
-  * @param {Range} range the range
+  * @param {Range} [range=null] the range
   * @return {Range} the range needed
   */
   self.getRange = function(range) {
+    if (!range && !sheet_) throw 'must set a default sheet or specify a range';
+    range = range || sheet_.getDataRange();
     return range.offset(0, 0, self.getNumRows() + (self.hasHeaders() ? 1 : 0), self.getNumColumns());
   }
   /**
@@ -692,7 +785,7 @@ function Fiddler() {
         if (Object.keys(data[i]).some(function(d) {
           return !e.hasOwnProperty(d);
         })) {
-          throw new Error('unknown columns in row data to insert');
+          throw new Error('unknown columns in row data to insert:' + JSON.stringify(Object.keys(data[i])));
         }
         
       });
@@ -825,7 +918,8 @@ function Fiddler() {
   self.setData = function(dataOb) {
     
     // need to calculate new headers
-    headerOb_ = dataOb.reduce(function(hob, row) {
+    
+    headerOb_ = (dataOb || []).reduce(function(hob, row) {
       Object.keys(row).forEach(function(key) {
         if (!hob.hasOwnProperty(key)) {
           hob[key] = Object.keys(hob).length;
@@ -981,6 +1075,15 @@ function Fiddler() {
   function columnLabelMaker_(columnNumber, s) {
     s = String.fromCharCode(((columnNumber - 1) % 26) + 'A'.charCodeAt(0)) + (s || '');
     return columnNumber > 26 ? columnLabelMaker_(Math.floor((columnNumber - 1) / 26), s) : s;
+  }
+  
+  // constructor will populate if a sheet is given
+  if (sheet) {
+    self.populate(sheet);
+  }
+  
+  else if (typeof sheet !== typeof undefined) {
+    throw 'sheet was passed in constructor but could not be opened';
   }
   
 };
