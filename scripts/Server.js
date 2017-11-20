@@ -27,8 +27,9 @@ var Server = (function(ns) {
     var keys = efx.getKeys();
     
     // read the latest item
-    var result = efx.read (keys.item)
+    var result = efx.read (keys.item);
     var data = result.data;
+    console.log (data);
     if (!data.ok) throw 'failed to get item ' + JSON.stringify(data);
     // post to the cloud function
     var packet =  {
@@ -40,14 +41,14 @@ var Server = (function(ns) {
         }
       }
     };
-      
+    console.log ("ordering ", packet);  
     var response = UrlFetchApp.fetch (data.value.keys['pd-order-generator'] , {
       payload:JSON.stringify(packet),
       contentType:"application/json",
       method:"post",
       muteHttpExceptions:true
     });
-
+    console.log ('back with', response.getContentText());
     return response.getResponseCode();
       
   };
