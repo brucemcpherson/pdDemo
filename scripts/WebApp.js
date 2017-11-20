@@ -23,7 +23,7 @@ function doPost(e) {
   // we can now use the efx
   var efx = Control.settings.efx;
   useTheData();
-
+  
 
   return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(ContentService.MimeType.JSON);
 
