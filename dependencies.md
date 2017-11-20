@@ -1,5 +1,5 @@
 # Google Apps Script Project: pdDemo
-This repo (pdDemo) was automatically updated on 24 May 2017 08:26:58 BST by GasGit
+This repo (pdDemo) was automatically updated on 20 November 2017 12:45:39 GMT by GasGit
 
 For more information see the [desktop liberation site](http://ramblings.mcpher.com/Home/excelquirks/drivesdk/gettinggithubready "desktop liberation") or [contact me on G+](https://plus.google.com/+BruceMcpherson "Bruce McPherson - GDE")
 ## Details for Apps Script project pdDemo
@@ -32,13 +32,13 @@ MartinCribSheet| server_js
 ### Directly referenced libraries
 *library*|*identifier*|*key*|*version*|*dev mode*|*source*|
 --- | --- | --- | --- | --- | --- 
-cUseful| cUseful|Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j|77|no|[here](libraries/cUseful "library source")
-cEffexApiClient| cEffexApiClient|M0ZoQipQg9qyYKGD-uPROISz3TLx7pV4j|8|no|[here](libraries/cEffexApiClient "library source")
+cUseful| cUseful|Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j|94|no|[here](libraries/cUseful "library source")
+cEffexApiClient| cEffexApiClient|M0ZoQipQg9qyYKGD-uPROISz3TLx7pV4j|9|no|[here](libraries/cEffexApiClient "library source")
 ### All dependencies and sub dependencies
 *library*|*identifier*|*key*|*version*|*dev mode*|*source*|
 --- | --- | --- | --- | --- | --- 
-cUseful| cUseful|Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j|77|no|[here](libraries/cUseful "library source")
-cEffexApiClient| cEffexApiClient|M0ZoQipQg9qyYKGD-uPROISz3TLx7pV4j|8|no|[here](libraries/cEffexApiClient "library source")
+cUseful| cUseful|Mcbr-v4SsYKJP7JMohttAZyz3TLx7pV4j|94|no|[here](libraries/cUseful "library source")
+cEffexApiClient| cEffexApiClient|M0ZoQipQg9qyYKGD-uPROISz3TLx7pV4j|9|no|[here](libraries/cEffexApiClient "library source")
 ### Enabled Google Services
 *library*|*identifier*|*version*
 --- | --- | --- 
