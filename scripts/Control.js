@@ -53,7 +53,7 @@ var Control = (function(ns) {
     
     // make the response look like the node client
     // dont bother return promises .. apps script is sync and im not sharing code with client
-    ns.settings.efx = cEffexApiClient.EffexApiClient.setProd ()
+    ns.settings.efx = cEffexApiClient.EffexApiClient.setFb ()
     .setPromiseMode(false)
     .setNodeMode(true);
     
@@ -298,12 +298,13 @@ var Control = (function(ns) {
     };
     
     // creat an alias item
-    return efx.writeAlias(initial, keys.item, keys.writer, "post", {
+    var r = efx.writeAlias(initial, keys.item, keys.writer, "post", {
       updaters: keys.updater,
       readers: keys.reader,
       seconds: 60*60*8
     });
-
+    console.log ("written alias item ", r.data);
+    return r;
     
   };
 
